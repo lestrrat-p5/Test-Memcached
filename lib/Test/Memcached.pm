@@ -191,8 +191,11 @@ sub stop {
         unless defined $self->pid;
     $sig ||= $TERMSIG;
     kill $sig, $self->pid;
+
+    local $?;
     while (waitpid($self->pid, 0) <= 0) {
     }
+
     $self->pid(undef);
 }
 
