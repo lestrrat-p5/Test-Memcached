@@ -11,7 +11,7 @@ use Time::HiRes ();
 # process does not die when received SIGTERM, on win32.
 my $TERMSIG = $^O eq 'MSWin32' ? 'KILL' : 'TERM';
 
-our $VERSION = '0.00001';
+our $VERSION = '0.00002';
 our $errstr;
 our %OPTIONS_MAP = (
     # perl name               => [ $option_name, $boolean, $default ]
