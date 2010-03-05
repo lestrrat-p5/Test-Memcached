@@ -269,6 +269,31 @@ Test::Memcached - Memcached Runner For Tests
 Test::Memcached automatically sets up a memcached instance, and destroys it
 when the perl script exists. 
 
+=head1 HACKING Makefile
+
+This is not for the faint of heart, but you can actually hack your CPAN style
+Makefile to start your memcached server once per "make test". Do something like this in your Makefile.PL:
+
+    # After you generated your Makefile (that's after your "WriteMakeffile()"
+    # or "WriteAll()" statements):
+
+    if (-f 'Makefile') {
+        open (my $fh, '<', 'Makefile') or die "Could not open Makefile: $!";
+        my $makefile = do { local $/; <$fh> };
+        close $fh or die $!;
+
+        $makefile =~ s/"-e" "(test_harness\(\$\(TEST_VERBOSE\), )/"-I\$(INST_LIB)" "-I\$(INST_ARCHLIB)" "-It\/lib" "-MTest::Memcached" "-e" "\\\$\$SIG{INT} = sub { CORE::exit }; my \\\$\$memd; if ( ! \\\$\$ENV{TEST_MEMCACHED_SERVERS}) { \\\$\$memd = Test::Memcached->new(); if (\\\$\$memd) { \\\$\$memd->start(); \\\$\$ENV{TEST_MEMCACHED_SERVERS} = '127.0.0.1:' . \\\$\$memd->option('tcp_port'); } } $1/;
+
+        open (my $fh, '>', 'Makefile') or die "Could not open Makefile: $!";
+        print $fh $makefile;
+        close $fh or die $!;
+    }
+
+Then you can just rely on TEST_MEMCACHED_SERVERS in your .t files. 
+When make test ends, then the memcached instance will automatically stop.
+
+It's ugly, but it works
+
 =head1 METHODS
 
 =head2 new
