@@ -49,6 +49,10 @@ my %DEFAULTS = (
     memcached  => undef,
     pid        => undef,
     _owner_pid => undef,
+    memcached_version => undef,
+    memcached_major_version => undef,
+    memcached_minor_version => undef,
+    memcached_micro_version => undef,
 );
 
 Class::Accessor::Lite->mk_accessors(keys %DEFAULTS);
@@ -76,6 +80,17 @@ sub new {
         my $prog = _find_program( 'memcached' )
             or return;
         $self->memcached( $prog );
+    }
+    # run memcached -h, and find out the version string
+    my $cmd = join(' ', $self->memcached, '-h');
+    my $output = qx/$cmd/;
+    if ($output =~ /^memcached\s+((\d+)\.(\d+)\.(\d+))/) {
+        $self->memcached_version($1);
+        $self->memcached_major_version($2);
+        $self->memcached_minor_version($3);
+        $self->memcached_micro_version($4);
+    } else {
+        warn "Could not parse memcached version";
     }
 
     return $self;

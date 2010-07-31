@@ -9,4 +9,5 @@ requires 'Cwd';
 requires 'File::Temp';
 requires 'Time::HiRes';
 
+author_tests 'xt';
 WriteAll;
