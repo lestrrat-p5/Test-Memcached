@@ -44,7 +44,7 @@ our %OPTIONS_MAP = (
 our @SEARCH_PATHS = qw(/usr/local /opt/local /usr);
 
 my %DEFAULTS = (
-    options    => {},
+    options    => undef,
     base_dir   => undef,
     memcached  => undef,
     pid        => undef,
@@ -64,6 +64,8 @@ sub new {
         @_ == 1 ? %{ $_[0] } : @_,
         _owner_pid => $$,
     }, $class;
+
+    $self->{options} ||= {};
 
     if (defined $self->base_dir) {
         $self->base_dir(cwd . '/' . $self->base_dir)
@@ -97,7 +99,7 @@ sub new {
 }
 
 sub start {
-    my $self = shift;
+    my ($self, %args) = @_;
 
     return if defined $self->pid;
 
@@ -105,11 +107,12 @@ sub start {
         ! $self->options->{udp_port} &&
         ! $self->options->{tcp_port}
     ) {
-        my $port = 10000;
+        my $port = $args{tcp_port} || 10000;
         $port = 19000 unless $port =~ /^[0-9]+$/ && $port < 19000;
 
+        my $sock;
         while ( $port++ < 20000 ) {
-            my $sock = IO::Socket::INET->new(
+            $sock = IO::Socket::INET->new(
                 Listen    => 5,
                 LocalAddr => '127.0.0.1',
                 LocalPort => $port,
@@ -118,7 +121,9 @@ sub start {
             );
             last if $sock;
         }
-        die "empty port not found" unless $port;
+        if (! $sock) {
+            die "empty port not found";
+        }
         
         $self->options->{tcp_port} = $port;
     }
@@ -262,7 +267,7 @@ Test::Memcached - Memcached Runner For Tests
 
     use Test::Memcached;
 
-    my $memd = Test::MEmcached->new(
+    my $memd = Test::Memcached->new(
         options => {
             user => 'memcached-user',
         }
