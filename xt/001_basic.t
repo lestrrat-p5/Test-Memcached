@@ -27,3 +27,5 @@ if (ok($memd)) {
 
     ok ! kill 0 => $pid;
 }
+
+done_testing;
